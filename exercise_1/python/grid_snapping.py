@@ -16,13 +16,18 @@ if input_file:
 def read_decimal(num, precision=2):
     # read in decimal number and convert to integer
     sign = 1
-    if float(num) < 0:
+    if num.startswith('-'):
         sign = -1
+        num = num[1:]
     value = num.split(".")
-    num_prec = len(value[1])
-    if num_prec < precision:
-        value[1] += (precision-num_prec) * "0"
-    return sign*(10**precision * abs(int(value[0])) + int(value[1]))
+    if len(value) == 1:
+        value.append("0")
+        
+    whole = value[0]
+    fractional = value[1][:precision]
+    fractional = fractional + "0" * (precision - len(fractional))
+    
+    return sign * int(whole + fractional)
 
 precision = 2
 
