@@ -1,9 +1,8 @@
 import sys
 
 # read in lines from standard input
-line = sys.stdin.readline().strip().split(" ")
-a = int(line[0])
-b  = int(line[1])
+a = int(sys.stdin.readline().strip())
+b  = int(sys.stdin.readline().strip())
 
 # algorithm goes here
 threshold = b // a - 1
@@ -23,8 +22,8 @@ while line != "stop":
 
 # output time spent
 time = 0
-if week < threshold:
+if week <= threshold:
     time = a*week
-elif week >= threshold:
+else:
     time = a*threshold + b
 print(time)
