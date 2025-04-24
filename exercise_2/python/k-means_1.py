@@ -1,5 +1,6 @@
 import sys
 
+""""
 # for debugging with input file
 import os
 input_file = os.environ.get('INPUT_FILE')
@@ -9,7 +10,7 @@ if input_file:
     # Construct the path to the input file
     input_path = os.path.join(script_dir, input_file)
     sys.stdin = open(input_path, 'r')
-    
+"""
 
 line = sys.stdin.readline().strip().split(" ")
 c = int(line[0])
