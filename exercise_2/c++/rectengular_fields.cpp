@@ -2,8 +2,6 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <boost/dynamic_bitset.hpp>
-#include <stdexcept> // For exception handling
 
 std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(" \t\r\n");
@@ -12,7 +10,7 @@ std::string trim(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
-std::vector<boost::dynamic_bitset<>> read_input() {
+std::vector<std::vector<bool>> read_input() {
     std::string line;
     int r;
 
@@ -22,7 +20,7 @@ std::vector<boost::dynamic_bitset<>> read_input() {
     std::istringstream iss(line);
     iss >> r;
 
-    std::vector<boost::dynamic_bitset<>> rows(r, boost::dynamic_bitset<>(r, 0));
+    std::vector<std::vector<bool>> rows(r, std::vector<bool>(r, false));
 
     // 2. Read in the r rows
     for(int i = 0; i < r; ++i) {
@@ -38,16 +36,19 @@ std::vector<boost::dynamic_bitset<>> read_input() {
 }
 
 int main(){
-    std::vector<boost::dynamic_bitset<>> rows = read_input();
+    std::vector<std::vector<bool>> rows = read_input();
     long long count = 0;
     long long r = rows.size();
     for(int i = 0; i < r; ++i) {
         for(int j = i+1; j < r; ++j) {
             // std::cout << "row " << i << ": " << rows[i] << std::endl << "row " << j << ": " << rows[j] << std::endl;
             // perform bitwise AND to count common corners marked with 1
-            boost::dynamic_bitset<> result = rows[i] & rows[j];
+            size_t num_corners = 0;
+            for (size_t k = 0; k < r; ++k) {
+                if (rows[i][k] && rows[j][k]) 
+                    ++num_corners;
+            }
             // std::cout << "result: " << result << std::endl;
-            size_t num_corners = result.count();
             // add number of different rectangles formed by these two rows
             // (n choose 2) = n * (n - 1) / 2
             count += (long long) (num_corners * (num_corners - 1)) / 2;
