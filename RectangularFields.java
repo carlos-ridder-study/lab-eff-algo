@@ -5,7 +5,7 @@ import java.util.BitSet;
 import java.util.Random;
 
 
-public class Main {
+public class RectangularFields {
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         int r = Integer.parseInt(br.readLine());
