@@ -1,0 +1,59 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
+
+std::string trim(const std::string& str) {
+    size_t first = str.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return "";
+    size_t last = str.find_last_not_of(" \t\r\n");
+    return str.substr(first, last - first + 1);
+}
+
+std::vector<std::vector<bool>> read_input() {
+    std::string line;
+    int r;
+
+    // 1. Read the first line for dimensions
+    std::getline(std::cin, line);
+    line = trim(line);
+    std::istringstream iss(line);
+    iss >> r;
+
+    std::vector<std::vector<bool>> rows(r, std::vector<bool>(r, false));
+
+    // 2. Read in the r rows
+    for(int i = 0; i < r; ++i) {
+        std::getline(std::cin, line);
+        line = trim(line);
+        std::istringstream iss(line);
+        for(int j = 0; j < r; ++j) {
+            char c = line[j];
+            rows[i][j] = (c == '1');
+        }
+    }
+    return rows;
+}
+
+int main(){
+    std::vector<std::vector<bool>> rows = read_input();
+    long long count = 0;
+    long long r = rows.size();
+    for(int i = 0; i < r; ++i) {
+        for(int j = i+1; j < r; ++j) {
+            // std::cout << "row " << i << ": " << rows[i] << std::endl << "row " << j << ": " << rows[j] << std::endl;
+            // perform bitwise AND to count common corners marked with 1
+            size_t num_corners = 0;
+            for (size_t k = 0; k < r; ++k) {
+                if (rows[i][k] && rows[j][k]) 
+                    ++num_corners;
+            }
+            // std::cout << "result: " << result << std::endl;
+            // add number of different rectangles formed by these two rows
+            // (n choose 2) = n * (n - 1) / 2
+            count += (long long) (num_corners * (num_corners - 1)) / 2;
+        }
+    }
+    std::cout << count << std::endl;
+    return 0;
+}

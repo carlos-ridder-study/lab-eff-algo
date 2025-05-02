@@ -1,0 +1,85 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C++17 build active file",
+			"command": "/usr/bin/g++-11",
+			"args": [
+				"-std=c++17",
+				"-Wall",
+				"-Wextra",
+				"-g",
+				"${file}",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}.out"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: /usr/bin/g++-11, only basic warnings"
+		},
+		{
+			"type": "cppbuild",
+			"label": "C++17 Debug Build",
+			"command": "/usr/bin/g++-11",
+			"args": [
+				"-std=c++17",
+				"-Wall",
+				"-Wextra",
+				"-Wnon-virtual-dtor",
+				"-Wconversion",
+				"-Winline",
+				"-Wshadow",
+				"-Wunreachable-code",
+				"-Wuninitialized",
+				"-Wswitch-default",
+				"-Wundef",
+				"-Wfloat-equal",
+				"-Wreturn-type",
+				"-D_GLIBCXX_DEBUG",
+				"-D_GLIBCXX_DEBUG_PEDANTIC",
+				"-fdiagnostics-color=always",
+				"-g",
+				"-O0",	 // No optimization for debugging
+				"${file}",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}_debug.out"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: /usr/bin/g++-11, all warnings enabled, debug info included"
+		},
+		{
+            "type": "cppbuild",
+            "label": "C++: Release Build",
+            "command": "/usr/bin/g++-11",
+            "args": [
+                "-std=c++17",
+                "-Wall",
+                "-Wextra",
+                "-O3",  // Maximum optimization
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}_release.out"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "Release build: Optimized for performance (O3)"
+        }
+	]
+}
