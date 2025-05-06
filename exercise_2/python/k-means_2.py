@@ -32,6 +32,46 @@ class Vector:
     def __str__(self):
         return " ".join(str(x) for x in self.coords)
     
+class kdTree:
+    def __init__(self, point, dimension, left_child=None, right_child=None):
+        self.point = point
+        self.left_child = left_child
+        self.right_child = right_child
+        self.dimension = dimension
+
+    def is_close(self, point, distance):
+        d = (self.point - point).abs()
+        if d <= distance:
+            return True
+        if point.coords[self.dimension] - self.point.coords[self.dimension] < 0:
+            if self.left_child != None:
+                if self.left_child.is_close(point, distance):
+                    return True
+            if self.right_child != None:
+                if point.coords[self.dimension] + distance >= self.point.coords[self.dimension]:
+                    return self.right_child.is_close(point, distance)
+        else:
+            if self.right_child != None:
+                if self.right_child.is_close(point, distance):
+                    return True
+            if self. left_child != None:   
+                if point.coords[self.dimension] - distance < self.point.coords[self.dimension]:    
+                    return self.left_child.is_close(point, distance)
+        return False
+    
+    def insert_point(self, point):
+        if point.coords[self.dimension] - self.point.coords[self.dimension] < 0:
+            if self.left_child == None:
+                self.left_child = kdTree(point, (self.dimension+1) % len(point.coords))
+            else:
+                self.left_child.insert_point(point)
+        else:
+            if self.right_child == None:
+                self.right_child = kdTree(point, (self.dimension+1) % len(point.coords))
+            else:
+                self.right_child.insert_point(point)
+        
+    
 class CoverTree:
     def __init__(self, point, level):
         self.point = point
@@ -105,7 +145,8 @@ if line != "":
     point = Vector([float(x) for x in line.split(" ")])
     center_count += 1
     cover_radius = math.ceil(math.log2(R))
-    centers = CoverTree(point, cover_radius + 10)
+    # centers = CoverTree(point, cover_radius)
+    centers = kdTree(point, 0)
     line = sys.stdin.readline().strip()
 
 while line != "":
