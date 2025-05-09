@@ -10,7 +10,7 @@
         },
         {
             "name": "Python: Current File with Input File",
-            "type": "debugpy", 
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",

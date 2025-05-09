@@ -1,0 +1,10 @@
+{
+    // point to your installed JDK
+    "java.home": "C:\\Program Files\\Java\\jdk-22",
+    "java.configuration.runtimes": [
+      {
+        "name": "JavaSE-22",
+        "path": "C:\\Program Files\\Java\\jdk-22"
+      }
+    ]
+  }
