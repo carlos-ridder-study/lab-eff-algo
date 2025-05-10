@@ -154,3 +154,6 @@ x86/
 *.bak
 *.swp
 *.swo
+
+# Test files
+*test*
