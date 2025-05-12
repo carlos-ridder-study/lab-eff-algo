@@ -129,11 +129,15 @@ flowers = ["🌹", "🌼", "🌻", "🌸", "🌷", "🌺", "🪻", "💮", "🍀
 
 time_start = time.time()
 cyclic_sequence = de_bruijn(k, n)
-answer = cyclic_sequence + cyclic_sequence[:n-1]
+answer = cyclic_sequence
+if k > 1:
+    answer += cyclic_sequence[:n-1]
+# flowers are nicer but servers does not accept them
+# answer = map_sequence(answer, alphabet[:k])
 answer = map_sequence(answer, flowers[:k])
-#print(answer)
+print(answer)
 
-""
+"""
 # debugging
 print("optimum k**n + n-1 = ", k**n+n-1, ", answer has length",len(answer))
 time_end = time.time()
@@ -145,4 +149,4 @@ if __name__ == "__main__":
     is_valid = validate_de_bruijn_sequence(answer, flowers[:k], n)
     if is_valid:
         print("The answer is correct.")
-""
+"""
