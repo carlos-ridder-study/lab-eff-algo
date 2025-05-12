@@ -18,10 +18,14 @@ def de_bruijn(k: int, n: int) -> str:
     Generate a De Bruijn sequence for alphabet range(k) and subsequences of length n.
     Returns a string of length k**n containing every substring of length n exactly once (cyclically).
     """
-    if n == 0:
-        return ""
-    if k <= 0:
-        raise ValueError("k must be >= 1")
+    
+    # special cases for which integer arithmetic does not work
+    if n == 0 or k == 0:
+        return []
+    if n == 1:
+        return [i for i in range(k)]
+    if k == 1:
+        return [0] * n
 
     # Number of distinct (n-1)-length nodes
     base = k ** (n - 1)
@@ -74,21 +78,45 @@ def de_bruijn(k: int, n: int) -> str:
     circuit.reverse()
 
     sequence = [node % k for node in circuit[:-1]]
-    return "".join(str(s) for s in sequence)
+    return sequence
 
 
-def map_sequence(seq: str, symbols: list[str]) -> str:
+def map_sequence(seq: list[int], symbols: list[str]) -> str:
     """
     Map each character in `seq` (which must be in range(len(symbols)) )
     to the symbol at that index in `symbols`.
     """
     k = len(symbols)
-    out = []
-    for ch in seq:
-        idx = ord(ch) - ord('0')  # convert '0'.. to integer
-        out.append(symbols[idx])
+    out = [symbols[i] for i in seq]
     return "".join(out)
 
+
+def validate_de_bruijn_sequence(sequence: str, alphabet: list[str], n: int) -> bool:
+    """
+    Validate if every substring of length `n` from the given `alphabet` is present in the `sequence`.
+
+    Args:
+        sequence (str): The sequence to validate.
+        alphabet (list[str]): The list of symbols in the alphabet.
+        n (int): The length of substrings to check.
+
+    Returns:
+        bool: True if the sequence is valid, False otherwise.
+    """
+    from itertools import product
+
+    # Generate all possible substrings of length n from the alphabet
+    expected = {"".join(p) for p in product(alphabet, repeat=n)}
+    
+    # Use a sliding window over the sequence to get all substrings of length n.
+    observed = set(sequence[i:i+n] for i in range(len(sequence) - n + 1))
+    
+    missing = expected - observed
+    if missing:
+        for substring in missing:
+            print(f"Missing substring: {substring}")
+        return False
+    return True
 
 # read in lines from standard input
 line = sys.stdin.readline().strip().split(" ")
@@ -97,12 +125,24 @@ k = int(line[1])
 
 # algorithm goes here
 alphabet = list(string.ascii_lowercase[:k])
-flowers = ["🌹", "🌼", "🌻", "🌸", "🌷", "🌺", "🪻"]
+flowers = ["🌹", "🌼", "🌻", "🌸", "🌷", "🌺", "🪻", "💮", "🍀", "✿"]
 
 time_start = time.time()
 cyclic_sequence = de_bruijn(k, n)
 answer = cyclic_sequence + cyclic_sequence[:n-1]
-print(map_sequence(answer, alphabet))
+answer = map_sequence(answer, flowers[:k])
+#print(answer)
+
+""
+# debugging
+print("optimum k**n + n-1 = ", k**n+n-1, ", answer has length",len(answer))
 time_end = time.time()
 
-#print("time:", time_end - time_start)
+print("time:", time_end - time_start)
+
+# Example usage to validate the program's output
+if __name__ == "__main__":
+    is_valid = validate_de_bruijn_sequence(answer, flowers[:k], n)
+    if is_valid:
+        print("The answer is correct.")
+""
