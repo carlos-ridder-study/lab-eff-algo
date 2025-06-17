@@ -2,7 +2,30 @@ import sys
 import heapq
 import math
 
+
 def parse_input():
+    n, q = map(int, sys.stdin.readline().strip().split())
+    capacities = []
+    speeds = []
+
+    for _ in range(n):
+        c, s = map(int, sys.stdin.readline().strip().split())
+        capacities.append(c)
+        speeds.append(s)
+
+    distances = []
+    for _ in range(n):
+        row = list(map(int, sys.stdin.readline().strip().split()))
+        distances.append(row)
+
+    queries = []
+    for _ in range(q):
+        u, v = map(int, sys.stdin.readline().strip().split())
+        queries.append((u - 1, v - 1))
+
+    return n, q, capacities, speeds, distances, queries
+
+def parse_input_():
     input_lines = sys.stdin.read().splitlines()
     ptr = 0
 
@@ -67,7 +90,7 @@ def build_delivery_network(n, apsp, speeds, capacities):
 
 
 def dijkstra(n, graph, src):
-    print(type(graph))
+    #print(type(graph))
     dist = [math.inf] * n
     dist[src] = 0
     pq = [(0, src)]
@@ -85,19 +108,22 @@ def dijkstra(n, graph, src):
 if __name__ == "__main__":
     n, q, capacities, speeds, distances, queries = parse_input()
 
-    print("Stations:", n)
-    print("Queries:", q)
-    print("Capacities:", capacities)
-    print("Speeds:", speeds)
-    print("Distances:")
-    for row in distances:
-        print(row)
-    print("Queries:", queries)
+    debug = False
+    if debug:
+        print("Stations:", n)
+        print("Queries:", q)
+        print("Capacities:", capacities)
+        print("Speeds:", speeds)
+        print("Distances:")
+        for row in distances:
+            print(row)
+        print("Queries:", queries)
 
 
     # shortest distance map, since we cant assume triangle inequality holds
-    all_pairs_shortest_paths= floyd_warshall(n, distances=distances)
-    print(all_pairs_shortest_paths)
+    all_pairs_shortest_paths = floyd_warshall(n, distances=distances)
+    if debug:
+        print(all_pairs_shortest_paths)
 
     apsp = floyd_warshall(n, distances)
     delivery_graph = build_delivery_network(n, apsp, speeds, capacities)
