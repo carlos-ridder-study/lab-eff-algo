@@ -12,6 +12,9 @@ bool partition(unordered_set<int>& S, int k, vector<int>& low, vector<int>& high
     if (S.empty()) {
         return true;
     }
+    if (k == 0) {
+        return false;
+    }
     vector<int> G;
     for(int i : groupsizes[k]){
         if(S.find(i) != S.end()){
@@ -22,8 +25,8 @@ bool partition(unordered_set<int>& S, int k, vector<int>& low, vector<int>& high
     int l = G.size();
     if(l >= k){
         unordered_set<int> S_ = S;
-        for (int i : G){
-            S_.erase(i);
+        for (int i = 0; i < k; ++i) {
+            S_.erase(G[i]);
         }
         partition_possible = partition(S_, k, low, high, groupsizes);
     }
@@ -58,7 +61,7 @@ int main(){
     for(int k = 0; k <= n; k++) {
         // sort in ascending order of lower bound
         sort(groupsizes[k].begin(), groupsizes[k].end(), [&low](int a, int b) {
-        return low[a] < low[b];
+        return low[a] > low[b];
     });
     }
 
