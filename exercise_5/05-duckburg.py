@@ -1,6 +1,6 @@
 import sys
 
-"""
+
 # for debugging with input file
 import os
 input_file = os.environ.get('INPUT_FILE')
@@ -10,7 +10,7 @@ if input_file:
     # Construct the path to the input file
     input_path = os.path.join(script_dir, input_file)
     sys.stdin = open(input_path, 'r')
-"""
+
 
 # read in lines from standard input
 i = int(sys.stdin.readline().strip())
@@ -23,6 +23,8 @@ def one_dkmeans(S, k):
         return 0 
     S = sorted(S)
     n = len(S)
+    if k == 0:
+        return sum(S)
     C = [[0]*n for _ in range(n)]       # C[i][j] optimal cost of covering {x_i, ..., x_j} with a single center
     # Precompute prefix sums for fast range sum queries
     prefix = [0]*(n+1)
@@ -40,16 +42,17 @@ def one_dkmeans(S, k):
             right_count = r - m
             right_sum = prefix[r+1] - prefix[m+1]
             C[l][r] = (median * left_count - left_sum) + (right_sum - median * right_count)
-    
-    dp = [[n*k]*k for _ in range(n)]    # dp[i][j] store optimal cost of covering {x_0, ..., x_j} with i+1 centers
-    for i in range(n):
-        dp[0][i] = C(0, i)
-    for k_ in range(k-1)+1:
-        for i in range(n):
-            for j in range(i+1):
-                dp[k_][i] = min(dp[k_][i], dp[k_-1][j] + C(j+1, i))
+              
+    dp = [[1000*n]*n for _ in range(k)]    # dp[i][j] store optimal cost of covering {x_0, ..., x_j} with i+1 centers
+
+    for j in range(n):
+        dp[0][j] = C[0][j]
+    for i in range(1, k):
+        for j in range(n):
+            for l in range(j):
+                dp[i][j] = min(dp[i][j], dp[i-1][l] + C[l+1][j])
     return dp[k-1][n-1]
 
 # output the result
 result = one_dkmeans(S, i)
-print(n*25-result)
+print(n*25 - result)
