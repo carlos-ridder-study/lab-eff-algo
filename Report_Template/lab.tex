@@ -98,8 +98,6 @@
 	\tableofcontents
 	\clearpage
 	
-	\todo[inline]{Remove all \texttt{todo}-Commands}
-	
 	%------------------------------------------------
 	% Introduction
 	%------------------------------------------------
@@ -359,7 +357,7 @@ stopping and pruning and for the nearest-neighbor-search in certain
 well-behaved $k-d$ trees, the following result exists.
 \begin{theorem}~\citep{skrodzki2019}
     In a balanced $k-d$ tree the expected runtime of a nearest-neighbor-search
-    is $\mathcal O(\log n)$
+    is $\mathcal O(\log n)$.
 \end{theorem}
 The $k-d$ tree in the proof is constructed offline with all of points given 
 by adding them in such an order that the \textit{splitting dimension} always maximizes 
@@ -369,7 +367,7 @@ and the \textit{splitting value} is the median of the remaining points in the
 bounding rectangles which are closer to squares.
 \noindent However in higher dimensions $d \gg 1$ the pruning 
 becomes less effective because single dimensions contribute less to 
-total distance and it the runtime of nearest-neighbor-search
+total distance and the runtime of nearest-neighbor-search
 on randomly constructed $k-d$ trees is reported to approach linear time.
 \todo{Add more concrete results with sources}
 
@@ -384,17 +382,50 @@ any of Scrooges numbers.\\
 \;
 So given set of numbers $P \subset \{1, \dots, 1000\}$ and an integer $k \leq 100$ our task 
 is to find a set $S$ of $k$ integers that minimizes
-\[
+\begin{equation}\label{eq:cluster_cost}
     \sum_{x \in P}\min_{s \in S}|x - s|.  
-\]  
+\end{equation}
 In other words, we want to select $k$ center points such that the absolute distance to the center
 of the cluster is minimized, when all points are clustered by assigning them to the closest center point.\\
 This problem is known as \textit{k-center problem}. In general, just like $k$-means clustering
-it is \textit{np-hard}, which 
+it is \textit{np-hard}, although there exist efficient 2-approximations. But in our
+case we want to find an exact solution. We note that in one dimension, $k$-center is equal 
+to $k$-means and just as in $k$-means I we can again use the order in one dimension to our advantage.\\
 
+\subsection{Dynamic programming algorithm}
+We will prove the following theorem:
+\begin{theorem}\label{thm:kcenter}
+    Computing the minimal clustering cost \eqref{eq:cluster_cost} in 1d can be done
+    in $\mathcal O (kn^2)$ and $\mathcal O (kn)$ space.
+\end{theorem}
+\begin{proof}
+The first step is sorting the points from $P$ into ascending order $x_1, \dots, x_n$. Then selecting $k$ centers points
+any cluster reduces to a contiguous interval and the optimal center point for any interval
+is the median $\mu$, which can be coputed in constant time as $\lfloor\frac{x_i + x_j}{2}\rfloor$. We will refer to the sum of distances of an interval cluster 
+\begin{equation}\label{eq:covercost}
+    \sum_{l = i}^j|x_l - \mu_{i,j}| = (\mu_{i,j}-l)\mu_{i,j} - \sum_{l = i}^{\mu_{i,j}-i}x_l + \sum_{l = \mu_{i,j}+1}^{j}x_l - (j -\mu_{i,j})\mu_{i,j}   =: C(i,j)
+\end{equation}
+as the optimal clustering cost of the interval cluster $[i,j]$. Using prefix sums for $x_1, \dots, x_n$, 
+i. e. computing and storing $\texttt{prefix}[k] = \sum_{l=1}^k x_l$ in advance, which takes $\mathcal O(n)$ time and space,
+enables us to compute $C(i,j)$ with \eqref{eq:covercost} in constant time for any $1\leq i\leq j\leq n$.\\
+Now let $dp[i,j]$ be the optimal clustering cost of of clustering $\{x_1, \dots, x_j\}$
+with $i$ clusters, with the convention $dp[i,0]:=0$ for all $0 \leq i \leq n$. We can initialize $dp[1, m] = C(1, m)$ for all $1 \leq m \leq n$.
+For $i > 1$ the recursive formula
+\begin{equation}\label{eq:rec_optimality}
+    dp[i, m] = \min_{1\leq l \leq m} dp[i-1, l-1] + C(l, m)
+\end{equation}
+holds. This can be seen by given the first $m$ points and $i$ centers, considering the
+rightmost center $l$. $l$ lies between $x_1$ and $x_m$. For any those values of $c$
+the optimal clustring cost consists of the optimal cost of covering the interval
+$[1, l-1]$ with $i-1$ clusters $dp[i-1, l-1]$ and the cost of covering $[l, m]$ with $l$ 
+$C(l, m)$. Thus minimizing over all possible values of $l$ yields the minimum cost.\\
+With \eqref{eq:rec_optimality} $dp$ can be computed by iterating over $i$ and $m$ and 
+selecting the minimum over all $1 \leq l \leq m$ in each iteration.\\
+This results in a runtime of $\mathcal O(k n^2)$ and space complexity of $\mathcal O(kn)$.
 
+\end{proof}
 
-    \section{Fast and Furious \textrm{I}} \label{sec:FFI}
+\section{Fast and Furious \textrm{I}} \label{sec:FFI}
     \textsc{Sebastian --} %\todo{remove newpage!}
     We are in an illegal street racing competition in Manhattan and receive a set $S$ of integer coordinates $S = \{c_1, \ldots, c_n \} = \{(x_1, y_1), \ldots, (x_n, y_n)\}$ that we have to visit, then return to the start $c_1$ to conclude the tour.
     While our opponent has to make due with a Nissan Skyline, we have a Lamborghini at our disposal that is at least twice as fast.
