@@ -68,7 +68,7 @@
 		\begin{center}
 			\large
 			{\Large Lab report} \\[1ex]
-			{\LARGE\textbf{Title of Report}}\todo{modify} \\[3ex]
+			{\LARGE\textbf{Selected Algorithms from competitive programming}}\todo{modify} \\[3ex]
 			Ruben Kemna, Carlos Ridder, Sebastian Sonntag \\[1ex]
 			\today \\[7ex]
 			in the Context of the Lab \\[1ex]
@@ -127,10 +127,13 @@
         \sum_{x, y \in S_i} \langle x-\mu_i, y-\mu_i\rangle &= \left\langle \sum_{x \in S_i}x-\mu_i, \sum_{y \in S_i}y-\mu_i\right\rangle = \langle 0, 0\rangle\\
         &= 0.
     \end{align*}
-    For clustering algorithms like $k$-means and can be useful to find the closest
-    center point to a given point. For example if there already exists a partition into clusters
-    and a new point gets added it can be greedily extended by adding it to the cluster whose center is closest.\\
-    
+    In general $k$-means clustering is \textit{np-hard}~\citep{kmeans_hardness} but there exist 
+    a simple and quite useful iterative algorithm that monotonically decreases the cost function and therefore is
+    guaranteed to converge albeit potentially slowly.\\
+    It is often referred to as just "the $k$-means algorithm" or Lloyd's algorithm~\citep{Lloyd82}
+    and it improves an existing clustering by reassigning each point to the cluster
+    with the closest mean and then recalculating the means. 
+
     \subsection{$k$-means I}\label{sec:km1}
     Now in task $k$-means I we are given a set of one-dimensional points $P \subset \mathbb R$,
     set of center points $C \subset \mathbb R$ and a maximum distance $R \in \mathbb{R}_{\geq 0}$
@@ -142,8 +145,8 @@
     \]
     and output the closest center if that is the case and output \texttt{none in range} 
     otherwise.\\
-    This could for example be used as a heuristic to decide if a new clustering should be computed or
-    a new cluster for $x$ should be added.\\
+    Finding the closest center is the first step in Lloyds algorithm and therefore 
+    is useful for $k$-means clustering.\\
     Because in this case the points are only one-dimensional we can make use of the standard ordering
     on $\mathbb R$. If we first order the center points in ascending order of their value
     we can use binary search to find the closest center for each point.
@@ -208,7 +211,7 @@
     if $x_j < z$ the left subtree is traversed first and the right subtree
     only has to be traversed after if $x_j - z \leq R$ which corresponds 
     to the hypersphere with radius $R$ centered at $x$ intersecting the
-    splitting hyperplane. 
+    splitting hyperplane as in Figure~\ref{fig:partDig}. 
     % \begin{algorithm}[H]
     % \caption{\text{is\_close} query in k-d tree}
     % \begin{algorithmic}[1]
@@ -320,11 +323,11 @@
 \node (1) {1}
   child { node (2) {2} }
   child { node (3) {3}
-    child { node (4) [xshift=-4mm] {4}    % shift 4 left to indicate left child
-      child { node (5) [xshift=4mm] {5}
+    child { node (4) [xshift=-6mm] {4}    % shift 4 left to indicate left child
+      child { node (5) [xshift=6mm] {5}
         child { node (7) {7} }
         child { node (6) {6}
-          child { node (8) [xshift=4mm] {8} } % shift 8 right to indicate right child
+          child { node (8) [xshift=6mm] {8} } % shift 8 right to indicate right child
         }
       }
     }
@@ -368,8 +371,10 @@ bounding rectangles which are closer to squares.
 \noindent However in higher dimensions $d \gg 1$ the pruning 
 becomes less effective because single dimensions contribute less to 
 total distance and the runtime of nearest-neighbor-search
-on randomly constructed $k-d$ trees is reported to approach linear time.
-\todo{Add more concrete results with sources}
+on randomly constructed $k-d$ trees is reported to approach linear time 
+(\textit{Curse of Dimensionality}). see \cite{nn_dimcurse1}, \cite{nn_dimcurse2}\\
+
+
 
 \section{Duckburg}\label{sec:duck}
 \textsc{Carlos --}
@@ -388,8 +393,8 @@ is to find a set $S$ of $k$ integers that minimizes
 In other words, we want to select $k$ center points such that the absolute distance to the center
 of the cluster is minimized, when all points are clustered by assigning them to the closest center point.\\
 This problem is known as \textit{k-center problem}. In general, just like $k$-means clustering
-it is \textit{np-hard}, although there exist efficient 2-approximations. But in our
-case we want to find an exact solution. We note that in one dimension, $k$-center is equal 
+it is \textit{np-hard}, although there exist simple 2-approximations. But in our
+case we want to find an exact solution. We note that in dimension one, $k$-center is equal 
 to $k$-means and just as in $k$-means I we can again use the order in one dimension to our advantage.\\
 
 \subsection{Dynamic programming algorithm}
@@ -416,10 +421,10 @@ For $i > 1$ the recursive formula
 \end{equation}
 holds. This can be seen by given the first $m$ points and $i$ centers, considering the
 rightmost center $l$. $l$ lies between $x_1$ and $x_m$. For any those values of $c$
-the optimal clustring cost consists of the optimal cost of covering the interval
+the optimal clustering cost consists of the optimal cost of covering the interval
 $[1, l-1]$ with $i-1$ clusters $dp[i-1, l-1]$ and the cost of covering $[l, m]$ with $l$ 
 $C(l, m)$. Thus minimizing over all possible values of $l$ yields the minimum cost.\\
-With \eqref{eq:rec_optimality} $dp$ can be computed by iterating over $i$ and $m$ and 
+With \eqref{eq:rec_optimality} the $dp$ array can be computed by iterating over $i$ and $m$ and 
 selecting the minimum over all $1 \leq l \leq m$ in each iteration.\\
 This results in a runtime of $\mathcal O(k n^2)$ and space complexity of $\mathcal O(kn)$.
 
@@ -851,7 +856,7 @@ This results in a runtime of $\mathcal O(k n^2)$ and space complexity of $\mathc
     We combine this with the simpler bound from before and get: $\min(\left \lfloor n - n/d \right \rfloor,\ 4(nd - n)/d^2) \leq 3n/4$.
     Still, the worst-case runtime is $\mathcal{O}(n^3)$, as we examine at most $n$ other buildings for every one of the $n^2$ buildings in the input. 
     Equivalently, the runtime is $\mathcal{O}(m^{3/2})$, where $m$ is the number of skyscrapers in the input.
-
+\newpage
 \section{Looking for Oil} \label{sec:LookingForOil}
 \textsc{Ruben --}
 In the \emph{Looking for Oil} exercise, we are tasked with selecting a single \emph{axis-aligned rectangle} inside a square field discretized into $n \times n$ parcels. For each parcel we are given an estimated profit (revenue of the oil minus purchasing cost). The task is therefore to choose the rectangle whose total profit is maximized.
