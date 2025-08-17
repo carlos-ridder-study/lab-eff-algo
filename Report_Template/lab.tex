@@ -1,0 +1,1088 @@
+%------------------------------------------------
+% Latex-Grundgerüst für Labausarbeitungen
+%
+% zu Erzeugen mit
+%   pdflatex ausarbeitung.tex
+%
+% von Carsten Gutwenger, Nils Kriege, Denis Kurz, Till Schäfer, Lutz Oettershagen, Jonas Charfreitag
+% 
+%------------------------------------------------
+
+\documentclass[a4paper,12pt,headsepline]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[automark]{scrlayer-scrpage}                     % Kopf-/Fußzeilen
+\usepackage[T1]{fontenc}                                    % Unterstützung für Umlaute mit Fonts
+
+\usepackage[pdftex]{graphicx,color}                         % Einbetten von Grafiken, Farbe
+\usepackage{subcaption}                                     % subfigures
+\usepackage{url}                                            % \url{}-Kommando
+\usepackage[pdftex,pdfpagelabels]{hyperref}                 % Hyperlinks im PDF
+\usepackage[round]{natbib}                                  % Literaturverzeichnis
+\usepackage{doi}                                            % DOIs
+
+\usepackage[section,boxed]{algorithm}                       % Floating-Umgebung für Algorithmen
+\usepackage{algpseudocode}                                  % Pseudocode für Algorithmen
+\usepackage{amsmath}                                        % Mathe-Befehle: \frac{m}{n}, \log, \mathcal O, ...
+\usepackage{amssymb}                                        % Mathe-Symbole: \mathbb N, ...
+\usepackage{amsthm}                                         % Theorem-Umgebungen, siehe \newtheorem und letzte Subsection
+\usepackage{tikz}                                           % Zeichnungen, z.B. von Graphen
+\setlength {\marginparwidth}{2cm}                           % Addition Sebastian - Removes warning from todonotes by making them wider.
+\usepackage{todonotes}                                      % kaum zu übersehende TODO-Anmerkungen
+
+\usepackage{enumerate}                                      % Addition Sebastian
+\usetikzlibrary{arrows.meta,positioning}
+\usetikzlibrary{calc}                                       % Addition Carlos
+
+% Header und Footer
+\pagestyle{scrheadings}
+\ofoot{}\cfoot{}\ifoot{}
+\lehead{\pagemark}
+\rehead{\slshape\leftmark}
+\lohead{\slshape\leftmark}
+\rohead{\pagemark}
+
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+
+\begin{document}
+	
+	%------------------------------------------------
+	% Title Page
+	%------------------------------------------------
+	
+	\begin{titlepage}
+		\sffamily
+		\vspace*{-3.5cm}
+		\hspace*{11cm}
+		\includegraphics[width=6cm]{ub_logo}
+		
+		\vspace*{4cm}
+		\begin{center}
+			\large
+			{\Large Lab report} \\[1ex]
+			{\LARGE\textbf{Title of Report}}\todo{modify} \\[3ex]
+			Ruben Kemna, Carlos Ridder, Sebastian Sonntag \\[1ex]
+			\today \\[7ex]
+			in the Context of the Lab \\[1ex]
+			{\Large\textbf{Efficient Algorithms for selected Topics}} \\[1ex]
+			of Prof.~Dr.~Heiko Röglin \\[1ex]
+			Summer Semester 2025%\todo{modify}
+		\end{center}
+		
+		\vspace*{3cm}
+		\noindent
+		\textbf{Tutor:} \\[1ex]
+		Joshua Könen, Sarah Sturm, Aaron Weinmann\\[1ex] %\todo{modify}
+		Prof.~Dr.~Heiko Röglin \\[1ex]
+		
+		\noindent
+		
+		\vspace*{\fill}
+		\noindent
+		Fakultät für Informatik\\
+		Universität Bonn
+	\end{titlepage}
+	
+	%------------------------------------------------
+	% Table of Contents
+	%------------------------------------------------
+	
+	\tableofcontents
+	\clearpage
+	
+	\todo[inline]{Remove all \texttt{todo}-Commands}
+	
+	%------------------------------------------------
+	% Introduction
+	%------------------------------------------------
+
+    \section{ $k$-means} \label{sec:kmeans}
+    \textsc{Carlos --} 
+    $k$-means refers to a clustering algorithm for data points in a vector space $\mathbb R^d$.
+    Given a set of $n$ observations $X = \{x_1, \dots, x_n\} \subseteq \mathbb R^d$ the task is to
+    find a partition of $X$ into a set of $m$ clusters $S = \{S_1, \dots, S_k\}$ such that the 
+    (average) squared euclidean distance between points within each cluster is minimized, 
+    i. e. find
+    \begin{equation}\label{eq:km1}
+        \arg\min_{S}\sum_{i=1}^k\frac{1}{\lvert S_i\rvert}\sum_{x,y \in S_i}\lVert x-y \rVert^2
+        = \arg\min_{S}2\sum_{i=1}^k\sum_{x,y \in S_i}\lVert x-\mu_i \rVert^2
+    \end{equation}
+    where $\mu_i$ is the median (center) of cluster $S_i$, i. e.
+    \[
+        \mu_i = \frac{1}{|S_i|}\sum_{x\in S_i}x.
+    \]
+    Equality \eqref{eq:km1} follows from
+    \begin{align*}
+        \sum_{x,y \in S_i} \lVert x-y \rVert^2 &= \sum_{x,y \in S_i} \lVert (x-\mu_i) - (y-\mu_i) \rVert^2\\
+        &= \sum_{x,y \in S_i} \lVert x-\mu_i \rVert^2 + \lVert y-\mu_i\rVert^2 - 2\langle x-\mu_i, y-\mu_i \rangle\\
+        &= \sum_{x \in S_i}\lVert x-\mu_i \rVert^2 + \sum_{y \in S_i}\lVert y-\mu_i \rVert^2\\
+        &\quad - 2\sum_{x,y\in S_i}\langle x-\mu_i, y-\mu_i \rangle
+        \intertext{and}
+        \sum_{x, y \in S_i} \langle x-\mu_i, y-\mu_i\rangle &= \left\langle \sum_{x \in S_i}x-\mu_i, \sum_{y \in S_i}y-\mu_i\right\rangle = \langle 0, 0\rangle\\
+        &= 0.
+    \end{align*}
+    For clustering algorithms like $k$-means and can be useful to find the closest
+    center point to a given point. For example if there already exists a partition into clusters
+    and a new point gets added it can be greedily extended by adding it to the cluster whose center is closest.\\
+    
+    \subsection{$k$-means I}\label{sec:km1}
+    Now in task $k$-means I we are given a set of one-dimensional points $P \subset \mathbb R$,
+    set of center points $C \subset \mathbb R$ and a maximum distance $R \in \mathbb{R}_{\geq 0}$
+    and want to determine for every point $x \in P$ if the distance (with respect to the 
+    euclidean distance) to the closest center point is at most $R$, i. e.
+    if 
+    \[
+        \min_{c \in C} \lvert x - c \rvert \leq R
+    \]
+    and output the closest center if that is the case and output \texttt{none in range} 
+    otherwise.\\
+    This could for example be used as a heuristic to decide if a new clustering should be computed or
+    a new cluster for $x$ should be added.\\
+    Because in this case the points are only one-dimensional we can make use of the standard ordering
+    on $\mathbb R$. If we first order the center points in ascending order of their value
+    we can use binary search to find the closest center for each point.
+    \begin{algorithm}[H]
+    \caption{closest center in 1d}
+    \begin{algorithmic}[1]
+        \State Sort center points $C$ in ascending order.
+        \For{each point $x \in P$}
+            \State Perform binary search on sorted centers to find closest center point $c_x \in C$.
+            \If{$(x-c_x)^2 > R$}
+                \State \textbf{output} \texttt{none in range}
+            \Else
+                \State \textbf{output} $c_x$
+            \EndIf
+        \EndFor
+    \end{algorithmic}
+    \label{alg:cc1}
+    \end{algorithm}
+    \begin{theorem}
+        Given a list of $n$ points $P \subset \mathbb R$, list of $k$ center
+        points $C \subset \mathbb R$ (and a maximum distance $R \in \mathbb R_{\geq 0}$)
+        finding the closest center $\arg\min_{c \in C} |x - c|$ for each point $x \in P$
+        (and determining if its distance is at most $R$) can be done in $\mathcal O((k+n)\log k)$.
+    \end{theorem}
+    \begin{proof}
+        Sorting the center points can be done in $\mathcal O(k\log k)$ using a standard 
+        sorting algorithm such as \textit{Merge sort}~\citep{Knuth1998} and each binary search 
+        on the center points takes $\mathcal O(\log k)$ time because the search space
+        gets exactly halved in each iteration. Overall this results in a worst-case 
+        runtime of $\mathcal O(k\log k + n\log k) = \mathcal O((k+n)\log k)$.
+    \end{proof}
+
+    
+    \subsection{$k$-means II}
+    Now we are faced with the more realistic setting where $d > 1$. Concretely 
+    we are presented with an input stream of points $x_i \in \mathbb R^k$ and
+    maximum distances $R_i \in \mathbb R_{\geq 0}$. Starting with an empty set of
+    center points $C$ at each step we have to decide if the distance from $x_i$ to the closest
+    center point is at most $R_i$ and if that is not the case, add $x_i$ to $C$.\\
+    A naive approach would be to iterate over all center points in no particular order 
+    for each point $x_i$ until the distance is less than $R_i$ or the end is reached. This has 
+    a worst-case runtime of $i$ for the $i$-th point and if every point has to 
+    be added to the center points the overall worst-case runtime is $\mathcal O(\sum_{i=1}^ni) = \mathcal O(n^2)$
+    for an input stream of $n$ points in total.\\
+    But this is not fast enough yet, so ideally we want to find a way to decide if the distance
+    to the closest center point is at most $R_i$ in sublinear time by searching through
+    them in a more clever way.
+    \paragraph{Data structure}
+    Building on the idea for $k$-means I we can construct a data structure for storing
+    the center points that allows for something like binary search in the different dimensions.\\
+    This leads to a data structure called $k-d$ trees. $k-d$ trees
+    are binary trees with $k$-dimensional points at each node together with a $(k-1)$-dimensional
+    hyperplane that splits the space into two half spaces. All points in the left subtree 
+    then lie in one half space and all points in the right subtree in the other half space.\\
+    The easiest way of selecting the hyperplanes is to select the $(i \mod k)$-th dimension as the 
+    \textit{splitting dimension} at the $i$-th level of the tree and the corresponding coordinate of
+    the point as the \textit{splitting value}.\\
+    Inserting a new point then is exactly the same as for standard binary search trees.\\
+    Deciding if a point is closer than a given distance to any center point can be done by
+    traversing the tree until a point that is close enough has been found.
+    Let $j$ be the \textit{splitting dimension} and $z$ the \textit{splitting value}, then
+    if $x_j < z$ the left subtree is traversed first and the right subtree
+    only has to be traversed after if $x_j - z \leq R$ which corresponds 
+    to the hypersphere with radius $R$ centered at $x$ intersecting the
+    splitting hyperplane. 
+    % \begin{algorithm}[H]
+    % \caption{\text{is\_close} query in k-d tree}
+    % \begin{algorithmic}[1]
+    %     \State \textbf{Input:} node $n$, point $x \in \mathbb R^d$, distance $R \in \mathbb R_{\geq 0}$
+    %     \State $d \gets \infty$
+    %     \State $i \gets n\texttt{.dim}$
+    %     \If{$\lVert x - n\texttt{.point}\rVert^2 \leq R^2$}
+    %         \State \textbf{return True}
+    %     \EndIf
+    %     z = n\texttt{.coords[i]}
+    %     \If{$x_i < z$}
+    %     \State \textbf{return} is\_close($n$.left\_child, $x$, $R$) 
+    %         \If{$z - x_i \leq R$}
+    %             \State \textbf{return} is\_close($n$.right\_child, $x$, $R$) 
+    %         \EndIf{}
+    %     \Else 
+    %         \State \textbf{return} is\_close($n$.right\_child, $x$, $R$)
+    %         \If{$x_i - z \leq R$}
+    %             \State \textbf{return} is\_close($n$.left\_child, $x$, $R$) 
+    %         \EndIf{}
+    %     \EndIf
+    % \end{algorithmic}
+    % \label{alg:ccd}
+    % \end{algorithm}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.48\textwidth}
+\begin{tikzpicture}[scale=3, >=stealth, every node/.style={font=\small}]
+  % bounding box
+  \draw[thick] (-1,-1) rectangle (1,1);
+
+  % --- splitting segments (drawn only inside their node regions) ---
+  % root: vertical split at x = -0.46, from y=-1..1
+  \draw[line width=1pt] (-0.46,-1) -- (-0.46,1);
+
+  % left child of root: horizontal split at y = -0.1, in x in [-1,-0.46]
+  \draw[line width=1pt] (-1,-0.10) -- (-0.46,-0.10);
+
+  % right child of root (point (0.54,0.71)): horizontal split at y=0.71 for x in [-0.46,1]
+  \draw[line width=1pt] (-0.46,0.71) -- (1,0.71);
+
+  % node (-0.36,0.62) : vertical split x = -0.36 inside region x in (-0.46,1), y in (-1,0.71)
+  \draw[line width=1pt] (-0.36,-1) -- (-0.36,0.71);
+
+  % node (0.6,-0.29) : horizontal split y = -0.29 inside region x in (-0.36,1), y in (-1,0.71)
+  \draw[line width=1pt] (-0.36,-0.29) -- (1,-0.29);
+
+  % node (-0.17,-0.94): vertical split x = -0.17 inside region x in (-0.36,0.6), y in (-1,-0.29)
+  \draw[line width=1pt] (0.23,-0.29) -- (0.23,0.71);
+
+  % node (0.23,-0.12): vertical split x = -0.17 inside region x in (-0.36,0.6), y in (-1,-0.29)
+  \draw[line width=1pt] (-0.17,-1) -- (-0.17,-0.29);
+
+  % node (0.23,-0.12): horizontal split x = -0.17 inside region x in (-0.36,0.6), y in (-1,-0.29)
+  \draw[line width=1pt] (-0.17,-0.77) -- (1,-0.77);
+
+
+   % --- points and labels last, so they appear on top ---
+  \coordinate (p1) at (-0.46,-0.63);
+  \coordinate (p2) at (-0.94,-0.10); %h
+  \coordinate (p3) at ( 0.54, 0.71); %h
+  \coordinate (p4) at (-0.36, 0.62);
+  \coordinate (p5) at ( 0.60,-0.29); %h
+  \coordinate (p6) at ( 0.23,-0.12);
+  \coordinate (p7) at (-0.17,-0.94);
+  \coordinate (p8) at ( 0.26,-0.77); %h
+
+  \coordinate (qx) at (-0.14,-0.06);
+  \draw[red, fill=red, fill opacity=0.12, draw=red] (qx) circle (0.4); % translucent disk
+  \draw[red, thick] (qx) -- ($ (qx) + (0.4,0) $) node[midway, above, fill=white, inner sep=1pt] {$R$}; % radius line + label
+  \fill[black] (qx) circle (0.03); % query point marker
+  \node[anchor=west, fill=white, inner sep=0.8pt] at ($(qx)+(0.04,0.02)$) {$x$}; % label for query point
+
+  \foreach \pt/\num/\coord in {
+    p1/1/{$(-0.46,-0.63)$},
+    p4/4/{$(-0.36,0.62)$},
+    p6/6/{$(0.23,-0.12)$},
+    p7/7/{$(-0.17,-0.94)$}
+  }{
+    \fill[blue] (\pt) circle (0.03);
+    % index label left
+    \node[anchor=east,fill=white,inner sep=1pt] at ($(\pt)+(-0.02,0)$) {\num};
+    % coordinate label right
+    %\node[anchor=west,fill=white,inner sep=1pt] at ($(\pt)+(0.02,0)$) {\coord};
+  }
+
+  \foreach \pt/\num/\coord in {
+    p2/2/{$(-0.94,-0.10)$},
+    p3/3/{$(0.54,0.71)$},
+    p5/5/{$(0.60,-0.29)$},
+    p8/8/{$(0.19,-0.77)$}
+  }{
+    \fill[blue] (\pt) circle (0.03);
+    % index label left
+    \node[anchor=east,fill=white,inner sep=1pt] at ($(\pt)+(-0.02,-0.07)$) {\num};
+    % coordinate label right
+    %\node[anchor=west,fill=white,inner sep=1pt] at ($(\pt)+(0.02,-0.07)$) {\coord};
+  }
+\end{tikzpicture}
+\caption{Partition diagram with query $(x, R)$}
+\label{fig:partDig}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\begin{tikzpicture}[level distance=9mm, sibling distance=12mm,
+  every node/.style={circle,draw,inner sep=1pt,minimum size=6mm,font=\small}]
+\node (1) {1}
+  child { node (2) {2} }
+  child { node (3) {3}
+    child { node (4) [xshift=-4mm] {4}    % shift 4 left to indicate left child
+      child { node (5) [xshift=4mm] {5}
+        child { node (7) {7} }
+        child { node (6) {6}
+          child { node (8) [xshift=4mm] {8} } % shift 8 right to indicate right child
+        }
+      }
+    }
+  };
+\end{tikzpicture}
+\caption{Binary tree}
+\label{fig:bintree}
+\end{subfigure}
+\caption{A two-dimensional $k-d$ tree constructed by adding 8 random points
+from the unit cube $[-1,1]^2.$}
+\label{fig:kdtree}
+\end{figure}
+
+\paragraph{Analysis}
+The space complexity of a $k-d$ tree with $n$ nodes is $\mathcal O(dn)$.\\
+Inserting a new element into a $k-d$ tree takes $\mathcal O(h)$ time, where 
+$h$ is the height of the tree as for any binary tree. It is easy to see
+that in the worst-case $\mathcal O(h) = \mathcal O(n)$ but in practice its much better.\\
+\begin{theorem}~\citep{Bentley75}
+After inserting $n$ random points $x_1, \dots, x_n \in \mathbb R^d$
+into an empty ($d$-dimensional) $k-d$ tree, the expected height
+of the tree is $\mathbb E[h] \in \mathcal O(\log n)$. 
+\end{theorem}
+\noindent The runtime of the operation \texttt{is\_close($x, R$)} is somewhat more complex as 
+it not only depends on $h$ but also on which bounding rectangles 
+are intersected by the hypersphere centered at $x$ with radius $R$
+and thus potentially have to be searched.\\
+The problem is similiar to nearest-neighbor-search but with early
+stopping and pruning and for the nearest-neighbor-search in certain
+well-behaved $k-d$ trees, the following result exists.
+\begin{theorem}~\citep{skrodzki2019}
+    In a balanced $k-d$ tree the expected runtime of a nearest-neighbor-search
+    is $\mathcal O(\log n)$
+\end{theorem}
+The $k-d$ tree in the proof is constructed offline with all of points given 
+by adding them in such an order that the \textit{splitting dimension} always maximizes 
+the spread (biggest distance in that dimension) of the remaining points
+and the \textit{splitting value} is the median of the remaining points in the
+\textit{splitting dimension}. This results in a tree with logarithmic depth and
+bounding rectangles which are closer to squares.
+\noindent However in higher dimensions $d \gg 1$ the pruning 
+becomes less effective because single dimensions contribute less to 
+total distance and it the runtime of nearest-neighbor-search
+on randomly constructed $k-d$ trees is reported to approach linear time.
+\todo{Add more concrete results with sources}
+
+\section{Duckburg}\label{sec:duck}
+\textsc{Carlos --}
+In this task we are asked to find an algorithm that maximizes Scrooge McDucks (german: Dagobert Duck)
+net winnings in the following lottery.\\
+After paying 25\$ each, $n$ players choose an integer from $\{1, \dots, 1000\}$.
+Then Scrooge is allowed to choose $i \leq 100$ integers. The reward
+for each participant is now calculated as the minimum distance from his number to 
+any of Scrooges numbers.\\
+\;
+So given set of numbers $P \subset \{1, \dots, 1000\}$ and an integer $k \leq 100$ our task 
+is to find a set $S$ of $k$ integers that minimizes
+\[
+    \sum_{x \in P}\min_{s \in S}|x - s|.  
+\]  
+In other words, we want to select $k$ center points such that the absolute distance to the center
+of the cluster is minimized, when all points are clustered by assigning them to the closest center point.\\
+This problem is known as \textit{k-center problem}. In general, just like $k$-means clustering
+it is \textit{np-hard}, which 
+
+
+
+    \section{Fast and Furious \textrm{I}} \label{sec:FFI}
+    \textsc{Sebastian --} %\todo{remove newpage!}
+    We are in an illegal street racing competition in Manhattan and receive a set $S$ of integer coordinates $S = \{c_1, \ldots, c_n \} = \{(x_1, y_1), \ldots, (x_n, y_n)\}$ that we have to visit, then return to the start $c_1$ to conclude the tour.
+    While our opponent has to make due with a Nissan Skyline, we have a Lamborghini at our disposal that is at least twice as fast.
+    The opponent however will use an optimal tour.
+    As the cars capabilities are known, the victory depends on the length of the tour that we calculate and output as an answer to the coordinates received.
+
+    The problem is thus: Find a 2-OPT approximation of the \textit{Traveling Salesman Problem} (TSP) using the $\operatorname{L_1}$ metric and output its length.
+    In the two-dimensional coordinate space $\mathbb{Z}^{2}$, the distance between any two points $(c_i, c_j) \in S$ with coordinates $(x_i, y_i), (x_j, y_j)$, respectively, is given by 
+    \begin{equation}
+    \operatorname{d_1}(c_i,c_j) = \lvert x_i - x_j \rvert + \lvert y_i - y_j \rvert.
+    \label{eq:d1}
+    \end{equation}
+    That is, it is the sum of the absolute values of the differences in both coordinates.
+    As \citet{np-compl_geo} have shown that the $\operatorname{L_1 TSP}$ is NP-complete, we cannot hope to find any algorithm which runs in polynomial bounded time that finds the optimal tour.
+
+    %In the following, … \todo[inline]{Transition, maybe incorporate "The L1 traveling salesman problem"}
+    %
+    \subsection{Nearest Neighbor Algorithm}\label{sec:FFI_NN}
+    This very simple heuristic is probably quite close to what most people would use if they were presented with such a task in the real world.
+    In this greedy algorithm, a path is constructed as follows:
+
+    \begin{algorithm}
+        \caption{Nearest Neighbor}
+        \begin{algorithmic}[1]
+            \State Start with an arbitrary node.
+            \State Find node not yet in path that minimizes the distance to the node last added. Add this node to the path.
+            %\State Find node not yet in path that is closest to last added node and add this node to the path.
+            \State When all nodes are added to the path, connect the node last added and the start node.
+        \end{algorithmic}
+        \label{alg:NN}
+    \end{algorithm}
+
+    Clearly, this gives a viable tour, but it cannot guarantee 2-OPT as \citet{rosenkrantz_heur} state in Theorem~\ref{thm:NearestNeighbor}.
+
+    \begin{theorem}
+        For a traveling salesman graph with n nodes
+
+        $$
+        \frac{\operatorname{NEARESTNEIGHBOR}}{\operatorname{OPTIMAL}} \leq \frac{1}{2} \left\lceil \log_2 (n) \right\rceil + \frac{1}{2}~.
+        $$
+        \label{thm:NearestNeighbor}
+    \end{theorem}
+    Note however that the nearest neighbor algorithm can be programmed to operate in time proportional to $n^2$, where $n$ is the number of nodes.
+    
+    Furthermore, randomization of the starting node, i.e.\ restarting the algorithm multiple times and picking the best run makes the task of finding an instance where this algorithm gives a tour that is larger than $2 \cdot \operatorname{OPT}$ challenging.
+    This is probably exacerbated by the restriction of this exercise to integer coordinates.
+    
+    
+    \subsection{Minimum Spanning Tree}\label{sec:FFI_MST}
+    There are certainly better $\operatorname{L_1 TSP}$ heuristics that guarantee 2-OPT and deliver strong performance in empirical testing~\citep{ALLISON1984195}.
+    While the following approach, the Minimum Spanning Tree (MST) Heuristic, guarantees 2-OPT, you would not expect it to perform competitively in most cases.
+    %\citet{ALLISON1984195} state, that $B = 1.102 \cdot (\text{length of MST)}$ is a fairly reliable lower bound on the length of a TSP-tour.
+    
+    To construct the MST, we can use Prim's algorithm~\citep{prim_MST}.
+    Algorithm~\ref{alg:MST} then runs in time $\mathcal{O}(n^2)$, where $n$ is the number of nodes.
+
+    \begin{algorithm}
+    \caption{Minimum Spanning Tree}
+        \begin{algorithmic}[1]
+            \State Given the coordinates, compute a MST.
+            \State Duplicate all edges of this MST and return this length.
+        \end{algorithmic}
+        \label{alg:MST}
+    \end{algorithm}
+    
+    \begin{theorem}
+        Algorithm~\ref{alg:MST} gives a 2-approximation of the TSP problem.
+        More precisely, the cost of all edges is $2 \cdot \operatorname{OPT}_{\operatorname{MST}} \leq 2 \cdot \operatorname{OPT}_{\operatorname{TSP}}$
+        \label{thm:MST}
+    \end{theorem}
+
+    To prove this theorem, we first prove the following Lemma~\ref{lem:TSP_MST}:
+    
+    \begin{lemma}
+        The cost of an optimal tour $\operatorname{OPT}_{\operatorname{TSP}}$ is at least as large as the weight of a minimum spanning tree $\operatorname{OPT}_{\operatorname{MST}}$.
+        \label{lem:TSP_MST}
+    \end{lemma}
+    \begin{proof}
+        Consider the optimal traveling salesman tour $\operatorname{OPT}_{\operatorname{TSP}}$.
+        Delete one edge of the TSP tour.
+        This gives a (non-minimal) spanning tree of cost at most $\operatorname{OPT}_{\operatorname{TSP}}$.
+        %Note that this spanning tree is not necessarily minimal.
+    \end{proof}
+
+    From Lemma~\ref{lem:TSP_MST}, the proof for Theorem~\ref{thm:MST} follows immediately.
+    \begin{proof}
+        We note that this algorithm constructs a valid tour by duplicating all edges of the MST. The cost of this tour is then given by Lemma~\ref{lem:TSP_MST} to be at most $2 \cdot \operatorname{OPT}_{\operatorname{TSP}}$.
+    \end{proof}
+
+    
+    %\section{Fast and Furious \textrm{II}}
+    \section{Skyline}
+    %\todo{Uses Manhattan Distance(Equation~\ref{eq:d1}) like the problem from Section~\ref{sec:FFI}}
+    \textsc{Sebastian --}
+    In this exercise, we are tasked with city planning.
+    We decide to structure the city with a grid and build skyscrapers.
+    In order to ensure a pleasant looking skyline, we are interested in the minimum distance between two skyscrapers of the same height.
+
+    The problem is thus: In a grid of dimension $n$, and given the heights $\in \{0,\ldots,n^2-1\}$ of the $n^2$ skyscrapers located in the grid, find the minimum distance between two skyscrapers of the same height.
+    The distance metric is defined as the Manhattan Distance (Equation~\ref{eq:d1}) like the problem "Fast and Furious \textrm{I}" from Section~\ref{sec:FFI}.
+    %Additionally, we can assume that there are at least two skyscrapers of the same height.
+
+    The Algorithm for this problem is fairly simple.
+    We are given the set $S$ of skyscrapers and iterate through them row by row, i.e.\ $\{s_{1,1}, s_{1,2},\ldots,s_{1,n},s_{2,1},\ldots,s_{n,1},\ldots,s_{n,n}\}$.
+    The value of the $\{s_{i,j} \ \vert \ i,j \in \{1,\ldots,n\}\}$ is the height of the skyscraper and the coordinate is information that is given by its position.
+    
+    The key point is then that we use the height of the skyscrapers as key and map the coordinates as value into an efficient data structure. %key-value pair
+    Upon insertion of a new skyscraper $s$, iterate through the other skyscrapers of the same height $s'$ and calculate $\operatorname{d_1}(s,s').$%the distances between the new skyscraper and the other ones .
+
+    % \begin{algorithm}
+    % \caption{Skyline}
+    %     \begin{algorithmic}[1]
+    %         \State $\operatorname{M} := $ data structure that maps heights to skyscrapers.
+    %         \State $\operatorname{d_1} := $ given two coordinates, return Manhattan distance.
+    %         \State $\operatorname{distance} \gets \infty$
+    %         \While{Set $S$ of skyscrapers not empty}
+            
+    %             \State pick next $s \in S$ and map coordinates of $s$ to $\operatorname{M}$ according to height of $s$
+                
+    %             \For{all other items $s_i$ with same height as $s$}
+                
+    %                 \State distance $\gets \min(\operatorname{distance}, \operatorname{d_1}(s, s_i))$
+    %             \EndFor
+    %         \EndWhile
+    %     \end{algorithmic}
+    %     \label{alg:skyline}
+    % \end{algorithm}
+    While the approach of this Algorithm is correct, it is not efficient enough.
+    The worst-case runtime of this algorithm is $\mathcal{O}(m^2)$ where $m$ is the number of skyscrapers, of which there are $n^2$ many.
+    For $n$ being the grid dimension, the runtime is consequently $\mathcal{O}(n^4)$.
+    
+    One optimization is easy to see: As soon as we find a distance that is 1, we immediately return this as an answer, as we will not find a better solution.
+    This reduces the number of skyscrapers that can be of the same height without any of these having $\operatorname{distance}  1$ to at most $n^2/2$.
+    The buildings then form a check pattern, 
+    %In this case, the buildings of same height form a check pattern on the grid, 
+    such that the pairwise distance $\operatorname{d_1}$ (Equation~\ref{eq:d1}) between marked cells is $\geq 2$. %\todo{time bound?}
+
+    \subsection{Pruning}
+    In order to reduce the number of comparisons, we employ pruning techniques.
+    That is, we examine which comparisons cannot lead to discovering a smaller distance, and can subsequently be skipped.
+
+    First, observe that buildings of the same height are inserted in lexicographical order of their coordinates.
+    That means that we can easily iterate through the buildings in (reversed) lexicographical order.
+    
+    The second observation is that the current smallest distance can serve as a limit to how many other buildings we compute the distance to.
+    This notion is captured in Lemma~\ref{lem:sky_prune}.
+
+    \begin{lemma}
+        Define the following enumeration function for grid dimension $n$:
+        \\ $\operatorname{Enum}(i,j) = (i-1)\cdot n + j$, where $i$ is the y-coordinate and $j$ is the x-coordinate, and $i,j \in \{1, \ldots, n\}$.
+        % So we have $f(c) = f(i,j) =: ec$ \todo{simplify?}
+        Let $d$ be the current smallest distance, define a fixed point $s$ by its enumeration, and compare this to points $\{s' \ \vert \ s' < s\}$.
+        %$c'=(i',j')$, $i,j,i',j' \in \{1, \ldots, n\}$, $c' \prec c$, where $\prec$ is the lexicographical order.
+        %Let $d$ be the current smallest distance, let $c=(i,j)$, $c'=(i',j')$, $i,j,i',j' \in \{1, \ldots, n\}$, and let $c' \prec c$, where $\prec$ is the lexicographical order.
+        
+        Then for the $\operatorname{L_1}$-Metric, the smallest number that can yield a distance $< d$ is 
+        $$
+        s - (d-1) \cdot n  \text{, if this number is } > 0 .
+        $$
+        %\todo[inline]{first define enumeration function, then work with that to simplify the statement.}
+        %Then the last coordinate $c'$ with $\operatorname{d_1}(c,c') < d$ is: 
+        \label{lem:sky_prune}
+    \end{lemma}
+    
+    In any metric space, a sphere is a set of points at a fixed distance, the radius from a specific center point.
+    For the two dimensional Manhattan geometry, the sphere is a square oriented diagonally to the coordinate axes.
+    Figure~\ref{fig:L1-radius} shows the set of all points on a square grid that are a fixed distance $r = d - 1$ from the center.
+    
+    \begin{proof}
+        Enumerate all points row by row and let the radius with distance $r = d-1$ be defined by the points $\{p \ \vert \ \operatorname{d_1}(s,p) = r\}$ around the center point $s$ on a grid of dimension $n$.
+        Observe that any point outside this radius will have distance at least $d$.
+        
+        Then $s - (d-1) \cdot n$ has exactly distance $d-1$ from $s$ and is located directly above $s$ (Figure~\ref{fig:L1-radius}), if this number is $>0$, because $(d-1) \cdot n$ is exactly $d-1$ rows with $n$ elements each.
+        Therefore, any number smaller than that will have distance at least $d$.
+    \end{proof}
+
+    \begin{figure}
+        \centering
+        \begin{subfigure}[t]{0.45\textwidth}
+        \begin{tikzpicture}
+        \centering
+            \draw[step=0.5cm,lightgray,very thin] (-2,-2) grid (4,4);
+            \pgfpathcircle{\pgfpoint{2cm}{0.5cm}} {3pt}\color{red}
+            \pgfusepath{fill}
+            \pgfpathcircle{\pgfpoint{0cm}{0.5cm}} {3pt}\color{blue}
+            %\pgfpathcircle{\pgfpoint{5cm}{0.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{3.5cm}{1cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{3cm}{1.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{2.5cm}{2cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{2cm}{2.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{0.5cm}{1cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{1cm}{1.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{1.5cm}{2cm}} {3pt}
+            \pgfusepath{fill}
+            \pgfpathcircle{\pgfpoint{4cm}{0.5cm}} {3pt}\color{gray}
+            \pgfpathcircle{\pgfpoint{3.5cm}{0cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{3cm}{-0.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{2.5cm}{-1cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{2cm}{-1.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{1.5cm}{-1cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{1cm}{-0.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{0.5cm}{0cm}} {3pt}
+            \pgfusepath{fill};
+            \color{black}
+            \node [label={[xshift=2.0cm, yshift=2.5cm]$s-(d-1) \cdot n$}] {};
+            \node [label={[xshift=2.0cm, yshift=0.5cm]$s$}] {};
+            
+        \end{tikzpicture}
+        \caption{The radius with points $p$ with distance $r = d-1$ around the center point $s$ in red using the $\operatorname{L_1}$-Metric.
+        Note that the $\{p \ \vert \ p < s \}$ are blue, the $\{p \ \vert \ p > s \}$ are gray.}
+        %As we iterate through the list in reverse lexicographic order, the blue points at distance $r = d-1$ are the points with the largest distance that could decrease the distance. Points 
+        \label{fig:L1-radius}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{0.45\textwidth}
+        \centering\hspace{1.48cm}
+        \begin{tikzpicture}[trim left]
+            \draw[step=0.5cm,lightgray,very thin] (-2,-2) grid (4,4);
+            
+            \begin{scope}[xshift=1cm]
+            \pgfpathcircle{\pgfpoint{3cm}{0.0cm}} {3pt}\color{red}
+            \pgfusepath{fill}
+            \pgfpathcircle{\pgfpoint{2cm}{0.5cm}} {3pt}\color{blue!30}
+            %\pgfpathcircle{\pgfpoint{5cm}{0.5cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{3.5cm}{1cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{3cm}{1.5cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{2.5cm}{2cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{2cm}{2.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{2.5cm}{1cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{1cm}{0.5cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{1.5cm}{2cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{4cm}{0.5cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{1.5cm}{0cm}} {3pt}
+            \pgfusepath{fill}
+            %\pgfpathcircle{\pgfpoint{3.5cm}{-1cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{3cm}{-1.5cm}} {3pt}\color{gray!50}
+            \pgfpathcircle{\pgfpoint{2.5cm}{-1cm}} {3pt}
+            \pgfpathcircle{\pgfpoint{2cm}{-0.5cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{4cm}{-0.5cm}} {3pt}
+            %\pgfpathcircle{\pgfpoint{0.5cm}{0cm}} {3pt}
+            \pgfusepath{fill}
+            \end{scope}
+
+            \begin{scope}[xshift=2cm,yshift=-1.5cm]
+                \draw [blue, fill=blue, opacity=0.15, rotate=45] (0,0) rectangle(2.121,2.121);
+                \begin{scope}[yshift=0.5cm]
+                    \draw [black, rotate=45] rectangle(1.414,1.414);
+                \end{scope}
+                \pgfpathcircle{\pgfpoint{0cm}{1.5cm}} {3pt}\color{red}
+                \pgfusepath{fill}
+            \end{scope}
+
+            \begin{scope}[xshift=0cm,yshift=-1.5cm]
+                \draw [blue, fill=blue, opacity=0.15, rotate=45] (0,0) rectangle(2.121,2.121);
+                \begin{scope}[yshift=0.5cm]
+                    \draw [black, rotate=45] rectangle(1.414,1.414);
+                \end{scope}
+                \pgfpathcircle{\pgfpoint{0cm}{1.5cm}} {3pt}\color{red}
+                \pgfusepath{fill}
+            \end{scope}
+            
+            \begin{scope}[xshift=1cm,yshift=-0.5cm]
+                \draw [blue, fill=blue, opacity=0.15, rotate=45] (0,0) rectangle(2.121,2.121);
+                \begin{scope}[yshift=0.5cm]
+                    \draw [black, rotate=45] rectangle(1.414,1.414);
+                \end{scope}
+                \pgfpathcircle{\pgfpoint{0cm}{1.5cm}} {3pt}\color{red}
+                \pgfusepath{fill}
+            \end{scope}
+                        
+            \begin{scope}[xshift=-1cm,yshift=-0.5cm]
+                \draw [blue, fill=blue, opacity=0.15, rotate=45] (0,0) rectangle(2.121,2.121);
+                \begin{scope}[yshift=0.5cm]
+                    \draw [black, rotate=45] rectangle(1.414,1.414);
+                \end{scope}
+                \pgfpathcircle{\pgfpoint{0cm}{1.5cm}} {3pt}\color{red}
+                \pgfusepath{fill}
+            \end{scope}
+                        
+            \begin{scope}[xshift=3cm,yshift=-0.5cm]
+                \draw [blue, fill=blue, opacity=0.15, rotate=45] (0,0) rectangle(2.121,2.121);
+                \begin{scope}[yshift=0.5cm]
+                    \draw [black, rotate=45] rectangle(1.414,1.414);
+                \end{scope}
+                \pgfpathcircle{\pgfpoint{0cm}{1.5cm}} {3pt}\color{red}
+                \pgfusepath{fill}
+            \end{scope}
+
+            \begin{scope}[xshift=-2cm,yshift=-1.5cm]
+                \draw [blue, fill=blue, opacity=0.15, rotate=45] (0,0) rectangle(2.121,2.121);
+                \begin{scope}[yshift=0.5cm]
+                    \draw [black, rotate=45] rectangle(1.414,1.414);
+                \end{scope}
+                \pgfpathcircle{\pgfpoint{0cm}{1.5cm}} {3pt}\color{red}
+                \pgfusepath{fill}
+            \end{scope}
+
+            \begin{scope}[xshift=4cm,yshift=-1.5cm]
+                \draw [blue, fill=blue, opacity=0.15, rotate=45] (0,0) rectangle(2.121,2.121);
+                \begin{scope}[yshift=0.5cm]
+                    \draw [black, rotate=45] rectangle(1.414,1.414);
+                \end{scope}
+                \pgfpathcircle{\pgfpoint{0cm}{1.5cm}} {3pt}\color{red}
+                \pgfusepath{fill}
+            \end{scope}
+
+            
+            %\begin{scope}[xshift=-2cm]
+            %    \pgfpathcircle{\pgfpoint{3cm}{0.0cm}} {3pt}\color{red}
+            %    \pgfusepath{fill}
+            %    \pgfpathcircle{\pgfpoint{2cm}{0.5cm}} {3pt}\color{blue}
+            %    %\pgfpathcircle{\pgfpoint{5cm}{0.5cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{3.5cm}{1cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{3cm}{1.5cm}} {3pt}
+                %\pgfpathcircle{\pgfpoint{2.5cm}{2cm}} {3pt}
+                %\pgfpathcircle{\pgfpoint{2cm}{2.5cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{2.5cm}{1cm}} {3pt}
+                %\pgfpathcircle{\pgfpoint{1cm}{0.5cm}} {3pt}
+                %\pgfpathcircle{\pgfpoint{1.5cm}{2cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{4cm}{0.5cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{1.5cm}{0cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{3.5cm}{-1cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{3cm}{-1.5cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{2.5cm}{-1cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{2cm}{-0.5cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{4cm}{-0.5cm}} {3pt}
+            %    \pgfpathcircle{\pgfpoint{4.5cm}{0cm}} {3pt}
+            %    \pgfusepath{fill}
+            %\end{scope}
+        \end{tikzpicture}
+        \caption{A packing of spheres with radius $d-1$ and $\operatorname{L_1}$-Metric % the tightest packing of center points
+        such that no center point (red) is contained by the radius of another point (blue).
+        This is equivalent to center points with radius $d/2$ that cannot intersect (black).%, but not intersect. % in black.
+        }%Note that the $\{p \ \vert \ p \prec c \}$ are blue, the $\{p \ \vert \ p \succ c \}$ are gray.}
+        \label{fig:L1-radii}
+        \end{subfigure}
+    \end{figure}
+    
+    This gives us the stopping conditions for Algorithm~\ref{alg:skyline_2}.
+    \begin{algorithm}
+    \caption{Skyline with pruning}
+        \begin{algorithmic}[1]
+            \State $\operatorname{M} := $ data structure that maps heights to skyscrapers.
+            \State $\operatorname{d_1} := $ given two enumerations of coordinates, return Manhattan distance.
+            \State $\operatorname{distance} \gets \infty$
+            \While{Set $S$ of skyscrapers not empty AND $\operatorname{distance} \geq 2$}
+            
+                \State pick next $s \in S$ and map enumeration of $s$ to $\operatorname{M}$ according to height of $s$
+                \State $\operatorname{last} \gets s - (\operatorname{distance}-1) \cdot n$
+                \For{all other items $s_i$ with same height as $s$ AND $s_i \geq \operatorname{last}$}
+                
+                    \State distance $\gets \min(\operatorname{distance}, \operatorname{d_1}(s, s_i))$
+                \EndFor
+            \EndWhile
+            %\State return distance
+        \end{algorithmic}
+        \label{alg:skyline_2}
+    \end{algorithm}
+    %\todo{now what?}
+    %With this modification, the situation is the following. %Like before, while no two buildings of the same height are found, we map those buildings according to their height into the data structure.
+    %Map buildings according to their height into the data structure.
+    As soon as we have a smallest distance $d$, we stop evaluating elements that we know are too far away based on their enumeration.
+%    As soon as there is a valid smallest distance $d$ between two buildings, this $d$ is the factor that determines for how many elements $s_i$ we evaluate the distance.
+%    For $s$ being the last element we add to the list, and thus the comparison element, note that for all other elements $S' = \{s_i \ \vert \ s_i < s\}$: 
+%    $\operatorname{d_1}(s_i,s_j) \geq d, s_i \neq s_j \in S'$% will have pairwise distances of at least $d$
+%    , otherwise $d$ would have been set to a smaller value earlier. %, with $s > s_i \geq s-(d - 1) \cdot n$ will have pairwise distances of at least $d$.
+    Let $s$ be the last element we add to the list, then for all other pairs of elements $\{s_i,s_j \ \vert \ s_i < s_j < s\}$: $\operatorname{d_1}(s_i, s_j) \geq d$, as otherwise $d$ would have been set to a lower value earlier.
+%    To put it another way, the radii of length $d-1$ cannot intersect or contain any of the center points.
+
+    This already gives us an upper limit on the number of comparisons we will do: Given $d$, we will examine at most $d-1$ rows.
+    Disregarding the distances of elements between different rows, there are at most $\left \lfloor n/d \right \rfloor$ elements in each row with pairwise distance $\geq d$.
+    Therefore, over $d-1$ rows, we have at most $\left \lfloor n/d \right \rfloor \cdot (d-1) \leq \left \lfloor n-n/d \right \rfloor \leq n$ elements to compare.
+
+    %To achieve a tighter bound, consider the first row and examine … what is the situation?!
+    To achieve a better bound on the number of elements, model the interaction between points with $\operatorname{L_1}$-distance $\geq d$. Figure~\ref{fig:L1-radii} illustrates the following Lemma~\ref{lem:eq_radius}.% illustrates the situation of the following Lemma~\ref{lem:eq_radius}.
+    %The radius of a neighboring building cannot intersect or contain the center point of another building (Figure~\ref{fig:L1-radii}).
+%    Observe in Figure~\ref{fig:L1-radii}, that placing buildings at distance $d$ to each other
+    
+    
+    \begin{lemma}
+
+        Consider the two dimensional metric space $\mathbb{Z}^2$ and the $\operatorname{L_1}$-metric.
+        Then the following is equivalent:
+
+        \begin{enumerate}[(i)]
+            \item Given center points $s_i$ with radii $d-1$ and the condition that no radius can intersect or contain another center point. (blue areas in Figure~\ref{fig:L1-radii})
+            \item Given center points $s_i$ with radii $d/2$ and the condition that radii can touch, but not intersect. (black lines in Figure~\ref{fig:L1-radii})
+        \end{enumerate}
+        
+        %Using the $\operatorname{L_1}$-metric, Given center points $c_i$ with radii $d-1$ and the condition that the center of any point is not 
+        %Consider the $\operatorname{L_1}$-metric. %Examine center points $s_i$ with radii $d-1$ using the $\operatorname{L_1}$-metric.
+        %Then, for the distance between center points
+        %Then, the condition that no center point is contained within or intersected by the radius of another center point is equivalent to
+        %center points $s_i$ with radii $d/2$, where the radii can touch, but not intersect.
+        \label{lem:eq_radius}
+    \end{lemma}
+    \begin{proof}
+        $(i)$ implies that the distance between points is at least $(d-1) + 1 = d$, i.e.\ the halfway point between two points is $\geq d/2$, which is equivalent to $(ii)$.
+        Condition $(ii)$ implies that any two points will have distance at least $2 \cdot d/2 = d$ between them, i.e.\ no radius of length $d-1$ around any of the center points can contain or intersect another center point, which is equivalent to $(i)$. 
+        %Given center points $s_i$ with radii $d/2$ and no intersection of the radii means that      
+    \end{proof}
+
+    With this result, we can achieve a better bound on the number of elements to examine.
+
+    \begin{theorem}
+        In the metric space $\mathbb{Z}^2$ with $\operatorname{L_1}$-metric, and given current distance $d$ between elements, at most $4(nd-n)/d^2$ elements can be in the $d-1$ rows we examine.
+    \end{theorem}
+    \begin{proof}
+        We interpret the space given by $d-1$ rows as an area where we can place elements $s_i$ with non-overlapping radius $d/2$.
+        The area of $d-1$ rows is $A = n \cdot (d-1)$. The area inscribed by the radius of $d/2$ is $d^2/2$ (two triangles with base $d$ and height $d/2$). %, as it can be described by two triangles with length of base of $d$ and height $d/2$.
+        
+        We observe that half of the areas of the radii can be outside $A$, when the center points of all elements are on the upper or lower row. Thus, the number of $s_i$ in area A is at most:
+        % $
+        % 2 \cdot \frac{n \cdot (d-1)}{d^2/2} = \frac{4(nd - n)}{d^2}
+        % $
+        $
+        2 \cdot (n \cdot (d-1))/(d^2/2) = 4(nd - n)/d^2
+        $
+        \label{thm:bound_elements}
+    \end{proof}
+    For $d = 2$, this is maximized and we again get the upper bound of $n$ elements.
+    For bigger $d$, the bound from Theorem~\ref{thm:bound_elements} on the number of elements to compare is a sizeable improvement in run time.
+    We combine this with the simpler bound from before and get: $\min(\left \lfloor n - n/d \right \rfloor,\ 4(nd - n)/d^2) \leq 3n/4$.
+    Still, the worst-case runtime is $\mathcal{O}(n^3)$, as we examine at most $n$ other buildings for every one of the $n^2$ buildings in the input. 
+    Equivalently, the runtime is $\mathcal{O}(m^{3/2})$, where $m$ is the number of skyscrapers in the input.
+
+\section{Looking for Oil} \label{sec:LookingForOil}
+\textsc{Ruben --}
+In the \emph{Looking for Oil} exercise, we are tasked with selecting a single \emph{axis-aligned rectangle} inside a square field discretized into $n \times n$ parcels. For each parcel we are given an estimated profit (revenue of the oil minus purchasing cost). The task is therefore to choose the rectangle whose total profit is maximized.
+
+\subsection{Problem Statement}
+
+\paragraph{Input.}
+We are given a square grid of size $n$ with $1 \le n \le 300$, with entries $A_{i,j} \in \{-100,\ldots,100\}$.
+
+\paragraph{Goal.}
+Among all axis-aligned rectangles $R = [i_1..i_2] \times [j_1..j_2]$ with $1 \le i_1 \le i_2 \le n$ and $1 \le j_1 \le j_2 \le n$, maximize
+\[
+\mathrm{val}(R) \;=\; \sum_{i=i_1}^{i_2} \sum_{j=j_1}^{j_2} A_{i,j}.
+\]
+
+\subsection{Maximum Subarray in 1D (Kadane's Algorithm)}
+
+Before solving the 2D variant efficiently, we will take a look at the 1D maximum subarray problem. For a sequence $(a_1,\ldots,a_m)$, find a contiguous subarray with maximum sum. Kadane's algorithm maintains
+\[
+\texttt{curEndAt}_i = \max\{a_i,\, \texttt{curEndAt}_{i-1} + a_i\}\quad\text{and}\quad
+\texttt{best} = \max\{\texttt{best},\, \texttt{curEndAt}_i\}.
+\]
+Intuition: either the optimal subarray ending at $i$ continues the previous one (if it helps) or it restarts at $i$.
+
+\begin{algorithm}
+\caption{Kadane1D$(a_1,\ldots,a_m)$}
+\begin{algorithmic}[1]
+\State $\texttt{best} \gets a_1$, \ $\texttt{cur} \gets a_1$
+\For{$i \gets 2$ \textbf{to} $m$}
+  \State $\texttt{cur} \gets \max(a_i,\ \texttt{cur} + a_i)$
+  \State $\texttt{best} \gets \max(\texttt{best},\ \texttt{cur})$
+\EndFor
+\State \textbf{return} $\texttt{best}$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Correctness (sketch).}
+Every optimal subarray ending at position $i$ either includes position $i-1$ (then extending the best subarray ending at $i-1$ is optimal) or it does not (then it must start at $i$). Kadane's recurrence enumerates exactly these two cases. The global maximum is the best over all endpoints.
+
+\paragraph{Time and space.}
+Kadane runs in $\mathcal{O}(m)$ time and $\mathcal{O}(1)$ extra space.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=stealth, node distance=1.5cm]
+\node[draw, minimum width=0.9cm, minimum height=0.55cm, fill=green!15] (a1) {$2$};
+\node[draw, right=of a1, fill=green!15, minimum width=0.9cm, minimum height=0.55cm] (a2) {$3$};
+\node[draw, right=of a2, fill=red!15,   minimum width=0.9cm, minimum height=0.55cm] (a3) {$-8$};
+\node[draw, right=of a3, fill=green!15, minimum width=0.9cm, minimum height=0.55cm] (a4) {$7$};
+\node[draw, right=of a4, fill=red!15,   minimum width=0.9cm, minimum height=0.55cm] (a5) {$-1$};
+\node[draw, right=of a5, fill=green!15, minimum width=0.9cm, minimum height=0.55cm] (a6) {$2$};
+\node[draw, right=of a6, fill=green!15, minimum width=0.9cm, minimum height=0.55cm] (a7) {$3$};
+\draw[->] (a3.north) .. controls +(0,0.8) and +(0,0.8) .. (a4.north) node[midway, yshift=7mm]{reset};
+\draw (a4.south west) -- (a7.south east) node[midway, below=2mm]{best sum $= 11$};
+\end{tikzpicture}
+\caption{Kadane on $(2,3,-8,7,-1,2,3)$: the running sum resets after $-8$, and the best segment is $7,-1,2,3$.}
+
+\end{figure}
+
+\subsection{From 1D to 2D: Row Compression with Kadane}
+
+Any optimal rectangle $[i_1..i_2]\times[j_1..j_2]$ has some top row $i_1$ and bottom row $i_2$. For fixed $(i_1,i_2)$ we can \emph{compress} rows $i_1$ to $i_2$ into a single 1D array of column sums
+\[
+b_j = \sum_{i=i_1}^{i_2} A_{i,j}\quad (1 \le j \le n).
+\]
+Then the best horizontal span $[j_1..j_2]$ for these two rows is exactly the maximum subarray of $(b_1,\ldots,b_n)$, i.e.\ returned by Kadane1D. Enumerating all $i_1 \le i_2$ gives the global optimum.
+
+\begin{algorithm}
+\caption{MaxProfitRectangle2D$(A \in \mathbb{Z}^{n\times n})$ via row compression}
+\begin{algorithmic}[1]
+\State $\texttt{best} \gets -\infty$
+\For{$\texttt{topRow} \gets 1$ \textbf{to} $n$}
+  \State \textbf{for all } $\texttt{j}$: $\texttt{col}[\texttt{j}] \gets 0$ \Comment{start a new strip at \texttt{topRow}}
+  \For{$\texttt{bottomRow} \gets \texttt{topRow}$ \textbf{to} $n$}
+    \For{$\texttt{j} \gets 1$ \textbf{to} $n$}
+      \State $\texttt{col}[\texttt{j}] \gets \texttt{col}[\texttt{j}] + A_{\texttt{bottomRow},\,\texttt{j}}$ \Comment{add the new row elements}
+    \EndFor
+    \State $\texttt{best} \gets \max\!\big(\texttt{best},\ \text{Kadane1D}(\texttt{col})\big)$
+  \EndFor
+\EndFor
+\State \textbf{return} $\texttt{best}$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Correctness (sketch).}
+Fix any top/bottom rows $(i_1,i_2)$. For these rows, the sum of a rectangle equals the sum of its columns in the compressed array. Hence the best left/right boundary is exactly the maximum subarray. Taking the max over all $(i_1,i_2)$ covers the optimal rectangle.
+
+\subsection{Time and Space Complexity}
+
+The outer double loop enumerates $\mathcal{O}(n^2)$ row pairs, each Kadane call costs $\mathcal{O}(n)$ time, and the compression update per bottom row is also $\mathcal{O}(n)$. Therefore the total running time is
+\[
+\mathcal{O}(n^2) \cdot \mathcal{O}(n) \;=\; \mathcal{O}(n^3) .
+\]
+
+The space needed to exectute the algorithm is only $\mathcal{O}(n)$ for \texttt{col} (besides the input matrix).
+
+
+\section{Sweet Tooth} \label{sec:SweetTooth}
+\textsc{Ruben --}
+Next we will turn to sweets distribution amongst children. In this exercise, we must split a stash of sweets among $c$ children so that everyone gets the same number of sweets. Each child has preferences per sweet type (smaller numbers mean ``more preferred''). We may eat the leftovers. The task is to find the smallest priority threshold $p$ such that a fair distribution exists where each child only receives sweets of priority at most $p$. % cf. sheet
+
+\subsection{Problem Statement}
+
+Let there be $t$ sweet types and a count vector $a \in \mathbb{N}^t$ with total $s=\sum_{k=1}^t a_k$. There are $c$ children and a preference matrix $P \in \{1,\dots,P_{\max}\}^{c \times t}$ with entries $P_{i,k}$ (lower is better). Each child must receive exactly
+\[
+\text{share} \;=\; \big\lfloor \tfrac{s}{c} \big\rfloor
+\]
+sweets; the remaining $s - c \cdot \text{share}$ pieces are ours.
+
+For a threshold $p \in \{1,\dots,P_{\max}\}$, define decision variables $x_{i,k} \in \mathbb{N}$: number of sweets of type $k$ given to child $i$.
+
+\[
+\begin{aligned}
+&\sum_{i=1}^c x_{i,k} \;\le\; a_k && \forall k=1,\dots,t \quad \text{(limited stock)} \\
+&\sum_{k=1}^t x_{i,k} \;=\; \text{share} && \forall i=1,\dots,c \quad \text{(fair share)} \\
+&x_{i,k} \;=\; 0 && \text{if } P_{i,k} > p \quad \text{(respect threshold)} \\
+&x_{i,k} \in \mathbb{Z}_{\ge 0} && \text{(integrality).}
+\end{aligned}
+\]
+We seek the minimum $p$ for which a feasible solution exists.
+\vspace{0.3em}
+
+
+
+
+\subsection{Flow Modeling}
+
+Fix a threshold \(p\). We decide feasibility at this \(p\) by building a three-layer flow network
+\[
+s \;\longrightarrow\; \text{types }(T_1,\ldots,T_t) \;\longrightarrow\; \text{children }(C_1,\ldots,C_c) \;\longrightarrow\; t .
+\]
+The edges and capacities encode stock limits, the preference cutoff \(p\), and each child’s quota \(\textit{share}\):
+
+\begin{itemize}
+  \item \(s \to T_k\) has capacity \(a_k\): at most \(a_k\) items of type \(k\) can be allocated in total (stock).
+  \item \(T_k \to C_i\) exists \emph{iff} \(P_{i,k} \le p\). For its capacity we can safely use
+  \[
+  \mathrm{cap}(T_k \!\to\! C_i) \;=\; \min\{a_k,\ \textit{share}\}.
+  \]
+This is the minimal safe capacity. Any larger value is also feasible, but redundant because the flow on $T_k\!\to\!C_i$ is already bounded by $s\!\to\!T_k$ (at most $a_k$) and by $C_i\!\to\!t$ (at most $\textit{share}$). Any smaller value can exclude feasible allocations when a child must receive (almost) all of its $\textit{share}$ from type $k$.
+  \item \(C_i \to t\) has capacity \(\textit{share}\): this enforces that each child receives exactly \(\textit{share}\) sweets once the max flow hits the target value (see correctness).
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  ty/.style={draw,circle,minimum size=7mm},
+  ch/.style={draw,circle,minimum size=7mm},
+  io/.style={draw,rounded corners,minimum width=12mm,minimum height=7mm,align=center},
+  edgelabel/.style={sloped,midway,fill=white,inner sep=1pt,font=\small},
+  note/.style={font=\small}
+]
+% column x-positions
+\def\xs{0}   % source
+\def\xt{3}   % types
+\def\xc{7}   % children
+\def\xk{10}  % sink
+
+% y-positions for the vertical stacks
+\def\yA{1.8}
+\def\yB{0.6}
+\def\yC{-0.4}
+\def\yD{-1.6}
+
+% source/sink centered vertically
+\node[io] at (\xs,0) (s) {source $s$};
+\node[io] at (\xk,0) (t) {sink $t$};
+
+% types
+\node[ty] at (\xt,\yA) (t1) {$T_1$};
+\node[ty] at (\xt,\yB) (t2) {$T_2$};
+\node      at (\xt,\yC) (tdots) {$\vdots$};
+\node[ty] at (\xt,\yD) (tt) {$T_t$};
+
+% children
+\node[ch] at (\xc,\yA) (c1) {$C_1$};
+\node[ch] at (\xc,\yB) (c2) {$C_2$};
+\node      at (\xc,\yC) (cdots) {$\vdots$};
+\node[ch] at (\xc,\yD) (cc) {$C_c$};
+
+% source -> types (stock capacities)
+\draw[->] (s) -- (t1) node[edgelabel,above] {$a_1$};
+\draw[->] (s) -- (t2) node[edgelabel,above] {$a_2$};
+\draw[->] (s) -- (tt) node[edgelabel,below] {$a_t$};
+
+% types -> children
+\draw[->]                 (t1) -- (c1) node[edgelabel,above] {};
+\draw[->]                 (t1) -- (c2) node[edgelabel,above] {};
+
+\draw[->]                 (t2) -- (c2) node[edgelabel,above] {};
+\draw[->]                 (t2) -- (cc) node[edgelabel,below] {};
+
+\draw[->]                 (tt) -- (c1) node[edgelabel,above] {};
+\draw[->]                 (tt) -- (cc) node[edgelabel,below] {};
+
+% children -> sink (quota)
+\draw[->] (c1) -- (t) node[edgelabel,above] {$\text{share}$};
+\draw[->] (c2) -- (t) node[edgelabel,above] {$\text{share}$};
+\draw[->] (cc) -- (t) node[edgelabel,below] {$\text{share}$};
+
+\end{tikzpicture}
+\caption{Three-layer max-flow network for threshold $p$: source$\to$types (stock $a_k$), types$\to$children (only present if $P_{i,k}\le p$), children$\to$sink (quota \textit{share}).}
+\end{figure}
+
+We only insert edges \(T_k \!\to\! C_i\) that satisfy the preference cutoff \(P_{i,k} \le p\); disallowed pairs are absent from the network. With this construction, a feasible allocation at threshold \(p\) exists iff the maximum \(s\)-\(t\) flow equals \(c \cdot \textit{share}\).
+
+After now having found a way to test whether there exists a feasible allocation for a fixed threshold \(p\), we search for the \emph{minimum} feasible threshold by binary search over
+\[
+p \in \{1,\ldots,P_{\max}\}, \qquad P_{\max} := \max_{i,k} P_{i,k}
+\]
+(which equals \(t\) if preferences are ranks \(1,\ldots,t\)).
+
+\subsection{How We Compute the Max Flow}
+
+Any max-flow/min-cut algorithm would decide feasibility at a fixed threshold \(p\) (e.g., \cite{EdmondsKarp72}, \cite{Dinitz70}, or Push–Relabel by \cite{GoldbergTarjan88}). We implement \emph{Dinitz’s algorithm} because it fits layered networks well and is simple with adjacency lists.
+
+\paragraph{Dinitz (three-step view).}
+We work on the \emph{residual network} (forward edges with residual \(c_f>0\) and reverse edges that allow canceling flow).
+
+\textbf{Step 1 (BFS / level graph).} Run a BFS from \(s\) to label levels \(\ell(\cdot)\) using only residual edges. Keep only \emph{forward} residual edges with \(\ell(v)=\ell(u)+1\); this acyclic subgraph is the \emph{level graph}.
+
+\textbf{Step 2 (early stop).} If \(t\) was not reached during BFS, there is no augmenting path; return the current flow as \emph{maximum}.
+
+\textbf{Step 3 (DFS / blocking flow).} Using only edges of the level graph, do multiple DFS from \(s\) to \(t\). Each DFS finds a level-respecting augmenting path; push the path’s bottleneck value and update residuals. Maintain a \emph{current-arc} per node to skip exhausted edges. Stop when a \emph{blocking flow} is reached (no more \(s\)-\(t\) paths in the level graph).
+
+Repeat Steps 1–3 until Step 2 triggers. With integer capacities, Dinitz returns an \emph{integral} max flow, which we directly read as integer assignments \(x_{i,k}\) on the \(T_k\!\to C_i\) edges.
+
+\emph{Complexity.} The standard worst-case bound is \(O(EV^2)\) per feasibility check (here \(V=2+t+c\), \(E\le t+c+ct\)). Our network is shallow (paths have three naturally arising levels), so it's expected to perform well in practice.
+
+
+
+\subsection{Correctness}
+
+\begin{theorem}
+For any threshold $p$, there exists a feasible allocation $\{x_{i,k}\}$ that satisfies stock, quota, and threshold constraints if and only if the maximum flow equals $c \cdot \text{share}$ in the network defined above.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+($\Rightarrow$) Given a feasible $\{x_{i,k}\}$, send $x_{i,k}$ units along source$\to$type $k \to$child $i\to$sink. All capacities are respected by construction; the total flow is $\sum_i \text{share} = c \cdot \text{share}$.
+
+($\Leftarrow$) From a max flow of value $c \cdot \text{share}$, read off $x_{i,k}$ from the flow on edges type $k \to$ child $i$. Capacities ensure $\sum_i x_{i,k} \le a_k$ and $\sum_k x_{i,k} \le \text{share}$; the child$\to$sink edge saturating to $\text{share}$ forces equality. Missing edges enforce $x_{i,k}=0$ when $P_{i,k} > p$.
+\end{proof}
+
+\subsection{Time and Space Complexity}
+
+\textbf{Time.} Let $V = 2 + t + c$ and $E \le t + c + ct$ (source$\to$t types, up to $ct$ type$\to$child edges, $c$ child$\to$sink edges). One max-flow check with Dinitz runs in worst-case 
+\[
+\mathcal{O}(E \, V^2) \;=\; \mathcal{O}\big((ct)\,(c{+}t)^2\big).
+\]
+Binary search over \(p \in \{1,\ldots,P_{\max}\}\) adds a \(\log P_{\max}\) factor:
+\[
+\mathcal{O}\!\left(\log P_{\max}\cdot (ct)\,(c{+}t)^2\right).
+\]
+\textbf{Space.} Storing the residual network and Dinitz’s working arrays uses
+$\mathcal{O}(V+E)=\mathcal{O}(ct+c+t)=\mathcal{O}(ct)$ space per feasibility check.
+
+	%------------------------------------------------
+	% Literature
+	%------------------------------------------------
+	\newpage
+	\bibliographystyle{abbrvnat}
+	\bibliography{literature}
+	\addcontentsline{toc}{section}{\bibname}
+	
+\end{document}
